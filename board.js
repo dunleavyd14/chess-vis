@@ -6,7 +6,9 @@ let board = null;
 fetch("data/data.json")
 	.then(response => response.json())
 	.then(dataset => {
-		callbacks = {
+
+
+		const callbacks = {
 			afterMove : null,
 			onSelect : null
 		}
@@ -65,6 +67,7 @@ fetch("data/data.json")
 			const {total, data} = dataset[board.fen()]
 			let probMap = d3.rollup(data, g => d3.sum(g, d => d.count), d => d.start)
 
+			console.log(probMap)
 
 			probMap.forEach( (count, square, map) => {
 				d3.select(`.square-${square}`)
@@ -88,6 +91,43 @@ fetch("data/data.json")
 			})
 		}
 
+		function showScale() {
+			const margin = {top: 20, bottom: 20, right: 5}
+			const height = 500 - margin.top - margin.bottom
+			const width = 20
+			const svg = d3.select("#scale")
+				.append("svg")
+				.attr("height", height + margin.top + margin.bottom)
+			const data = Array.from(Array(height).keys())
+			
+			svg.selectAll("rect")
+				.data(data)
+				.enter()
+				.append("rect")
+					.attr("height", 1)
+					.attr("x", 0)
+					.attr("y", d => height - d + margin.bottom)
+					.attr("width", width)
+					.style("fill", d => d3.interpolateViridis(Math.sqrt(d/height)))
+
+			svg.append("text")
+				.attr("x", width + margin.right)
+				.attr("y", height + margin.bottom)
+				.text("0%")
+
+			svg.append("text")
+				.attr("x", width + margin.right)
+				.attr("y", margin.top + 10)
+				.text("100%")
+			
+			svg.append("text")
+				.attr("x", width + margin.right)
+				.attr("y", (height + margin.top + margin.bottom)/2)
+				.text("50%")
+
+		}
+
+		showScale()
 
 		callbacks.afterMove = colorPieceProbabilities
 		callbacks.onSelect = colorMoveProbabilities
@@ -95,4 +135,5 @@ fetch("data/data.json")
 
 		board = Chessboard("board", config)
 	})
+
 

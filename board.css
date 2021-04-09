@@ -1,0 +1,8 @@
+#main {
+	display:flex;
+}
+
+#scale, #board {
+	margin-left: 10px;
+	margin-right: 10px;
+}
