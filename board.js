@@ -7,10 +7,12 @@ fetch("data/data.json")
 	.then(response => response.json())
 	.then(dataset => {
 		callbacks = {
-			afterMove : null
+			afterMove : null,
+			onSelect : null
 		}
 
 		function onDragStart (source, piece, position, orientation) {
+			if (callbacks.onSelect) callbacks.onSelect(source)
 			if (game.game_over()) return false
 
 			if ((game.turn() === "w" && piece.search(/^b/) !== -1) ||
@@ -70,8 +72,25 @@ fetch("data/data.json")
 			})
 		}
 
+		function colorMoveProbabilities(source) {
+			resetBoardColors()
+			const {total, data} = dataset[board.fen()]
+
+			let probMap = d3.rollup(
+				data.filter(x => x.start === source),
+				g => d3.sum(g, d => d.count), 
+				d => d.end
+			)
+
+			probMap.forEach( (count, square, map) => {
+				d3.select(`.square-${square}`)
+					.style("background-color", d3.interpolateViridis(Math.sqrt(count/total)))
+			})
+		}
+
 
 		callbacks.afterMove = colorPieceProbabilities
+		callbacks.onSelect = colorMoveProbabilities
 
 
 		board = Chessboard("board", config)
