@@ -4,7 +4,7 @@ import os
 import json
 from tqdm import tqdm
 
-MAX_DEPTH = 15
+MAX_DEPTH = 10
 
 class MoveMap:
 	def __init__(self):
@@ -23,16 +23,32 @@ class MoveMap:
 			self._dict[key][value] = 1
 
 	def json(self):
+		for fen, obj in self._dict.items():
+			arr = []
+			total = obj["total"]
+			for k, count in obj.items():
+				if k == "total":
+					continue
+				else:
+					uci, san = k.split(" ")
+					arr.append({"start": uci[:2], "end": uci[2:], 
+									"uci": uci, "san": san, "count": count})
+			self._dict[fen] = {"total": total, "data": arr}
+
 		with open("data.json", "w") as f:
 			json.dump(self._dict, f, indent=4)
 
 def collect_from_game(game, move_map):
 	board = chess.Board()
 	for _, move in zip(range(MAX_DEPTH), game.mainline_moves()):
-		move_map.set(board.fen(), move.uci())
+		move_map.set(get_stripped_fen(board), f"{move.uci()} {board.san(move)}")
 		board.push(move)
 	
 
+
+def get_stripped_fen(board):
+	fen = board.fen()
+	return fen.split(" ")[0]
 
 if __name__ == "__main__":
 	move_map = MoveMap()
